@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <link rel="icon" href="Cupid Arrow.png" type="image/x-icon">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Love Day</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ======== БАЗОВЫЕ СТИЛИ ======== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --pink-50: #fff5f7;
+      --pink-100: #ffd4e9;
+      --pink-200: #f8b1d6;
+      --pink-300: #f184c7;
+      --pink-400: #e65abf;
+      --pink-500: #d83aa0;
+      --bg-grad: linear-gradient(145deg, #ffdbec 0%, #facbe6 45%, #f5badd 100%);
+      --text: #2d142c;
+      --card-bg: rgba(255, 250, 250, 0.78);
+      --shadow: 0 12px 28px rgba(150, 40, 90, 0.15);
+      --font-sans: "Inter", system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --font-display: "Playfair Display", serif;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--text);
+      min-height: 100vh;
+      background: var(--bg-grad);
+      background-attachment: fixed;
+      overflow-x: hidden;
+      position: relative;
+      backdrop-filter: blur(1px);
+       background-image: url('8e4ecd17dd9c6f329001773f39e08d74.jpg')
+    }
+
+    /* ===== ЛЕТЯЩИЕ ЛЕПЕСТКИ ===== */
+    #sakuraCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    /* Прелоадер сердце */
+    #preloader {
+      position: fixed;
+      inset: 0;
+      background: #ffe5f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      transition: opacity 0.5s ease;
+    }
+    .heart-beat {
+      width: 160px;
+      height: 160px;
+      display: grid;
+      place-items: center;
+      filter: drop-shadow(0 8px 18px #ff99cc);
+      animation: pulse 0.9s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      25% { transform: scale(1.18); }
+      50% { transform: scale(1); }
+      75% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
+    /* Шапка */
+    header {
+      text-align: center;
+      padding: 40px 16px 10px;
+      position: relative;
+      z-index: 10;
+    }
+    h1 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(2rem, 8vw, 3.2rem);
+      margin: 0 0 6px;
+      color: #3f1e3b;
+      text-shadow: 0 4px 14px rgba(255, 200, 235, 0.8);
+      letter-spacing: 1px;
+    }
+    .subtitle {
+      color: #4d2b4a;
+      font-size: 1.1rem;
+      font-weight: 400;
+      opacity: 0.95;
+    }
+
+    /* навигация */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 18px;
+      position: relative;
+      z-index: 20;
+    }
+    .nav {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 24px 0 12px;
+    }
+    .btn {
+      padding: 12px 26px;
+      border-radius: 60px;
+      border: none;
+      background: rgba(255, 240, 245, 0.8);
+      backdrop-filter: blur(8px);
+      color: #b32e7a;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: 0 6px 16px rgba(210, 90, 150, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    .btn:hover {
+      transform: translateY(-4px);
+      background: #fff0f8;
+      box-shadow: 0 12px 22px rgba(200, 70, 130, 0.25);
+    }
+    .btn.primary {
+      background: #ffffffd6;
+      color: #b13078;
+    }
+
+    /* Секции-страницы */
+    section.page {
+      display: none;
+      padding: 20px 0 50px;
+    }
+    section.page.active {
+      display: block;
+    }
+
+    /* Карточка текста */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border-radius: 40px;
+      padding: 32px 28px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      margin: 0 0 16px;
+      color: #2e0f36;
+      line-height: 1.2;
+    }
+    .card p {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      margin-bottom: 16px;
+      color: #2d1c2b;
+    }
+
+    /* ГАЛЕРЕЯ (сетка кликабельных превью) */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+      margin: 16px 0 10px;
+    }
+    .thumb {
+      aspect-ratio: 1/1;
+      background: #ffd9ec;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 6px 14px rgba(150, 60, 100, 0.2);
+      border: 2px solid white;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .thumb:hover {
+      transform: scale(1.02);
+      box-shadow: 0 12px 24px rgba(180, 70, 130, 0.4);
+    }
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;  /* клик идёт на родительский .thumb */
+    }
+
+    /* МОДАЛЬНАЯ ГАЛЕРЕЯ с листалкой */
+    .modal-gallery {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(30, 10, 20, 0.9);
+      backdrop-filter: blur(12px);
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+      padding: 16px;
+    }
+    .modal-gallery.open {
+      display: flex;
+    }
+    .modal-content {
+      position: relative;
+      max-width: 85vw;
+      max-height: 85vh;
+      background: #ffecf2;
+      border-radius: 48px;
+      padding: 20px 20px 30px;
+      box-shadow: 0 30px 60px #ff99bb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .modal-image-container {
+      width: 100%;
+      height: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-image-container img {
+      max-width: 100%;
+      max-height: 65vh;
+      border-radius: 32px;
+      box-shadow: 0 8px 20px #b34d7a;
+      object-fit: contain;
+      background: #ffe2f0;
+    }
+    .modal-caption {
+      margin: 14px 0 8px;
+      font-size: 1.2rem;
+      color: #97295e;
+      font-weight: 500;
+    }
+    .modal-nav {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+    }
+    .modal-nav button {
+      background: rgba(255, 220, 240, 0.9);
+      border: none;
+      font-size: 2.4rem;
+      width: 64px;
+      height: 64px;
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #b13b74;
+      box-shadow: 0 6px 14px #ffb8d5;
+      transition: 0.2s;
+      border: 2px solid white;
+    }
+    .modal-nav button:hover {
+      background: #ffe2f1;
+      transform: scale(1.07);
+      color: #8f265b;
+    }
+    .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 22px;
+      background: none;
+      border: none;
+      font-size: 2.6rem;
+      cursor: pointer;
+      color: #8a2f5e;
+      opacity: 0.8;
+      transition: 0.2s;
+      line-height: 1;
+      z-index: 10;
+    }
+    .close-btn:hover {
+      opacity: 1;
+      transform: scale(1.2);
+      color: #63133b;
+    }
+
+    /* адаптив */
+    @media (max-width: 640px) {
+      .card {
+        padding: 24px 18px;
+      }
+      .card h2 {
+        font-size: 1.9rem;
+      }
+      .nav .btn {
+        padding: 10px 20px;
+      }
+      .modal-nav button {
+        width: 56px;
+        height: 56px;
+        font-size: 2rem;
+      }
+    }
+
+    .hidden {
+      display: none;
+    }
+    .herf {
+      background: #ffffffd6;
+      color: #b13078;
+      text-decoration: none
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Прелоадер сердце -->
+  <div id="preloader">
+    <div class="heart-beat">
+      <svg width="140" height="140" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#e91e63" d="M64 108s-40-22-54-44c-12-18-6-40 13-52 14-9 31-8 41-2 10-6 27-7 41 2 19 12 25 34 13 52-14 22-54 44-54 44z" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- Canvas сакуры -->
+  <canvas id="sakuraCanvas"></canvas>
+
+  <!-- Шапка (скрыта до прелоадера) -->
+  <header id="site-header" style="display: none;">
+    <h1>С 14 февраля!<img src="Cupid Arrow.png" height= "50px" "love 1"> </h1>
+  </header>
+
+  <!-- Навигация -->
+  <nav class="container nav" id="site-nav" style="display: none;">
+    <button class="btn" data-target="wish">Поздравление</button>
+    <button class="btn" data-target="gallery">Галерея</button>
+    <button class="btn" data-target="text"><a class="herf" href="game.html">Для тебя</a></button>
+  </nav>
+
+  <!-- Основной контент -->
+  <main class="container" id="site-content" style="display: none;">
+
+    <!-- Страница "Для тебя" (стих) -->
+    <section id="text" class="page">
+      <div class="card">
+        <h2>✧ Стих для тебя ✧</h2>
+        <p>При каждом взгляде на тебя, я понимаю, что ты та, <br>
+И каждый раз смотря со стороны,<br>
+Я чувствую море тоски. <br>
+<br>
+Такое море, что не хватит слов, <br>
+Море что глубже твоих глаз, <br>
+Такое море, что больше океана и самых длинных в мире фраз. <br>
+________<br>
+<b>Я</b> так люблю тебя Полина, <br>
+<b>Т</b>ебя люблю как свою жизнь. <br>
+<b>Е</b>е люблю я как без мира,<br>
+<b>Б</b>ез мира я не смогу жить. <br>
+<b>Я</b> так хочу тебя увидеть. <br>
+<b>Л</b>юбви не меньше, чем вчера, <br>
+<b>Ю</b>ла что крутиться всю бесконечность, как мир и как наша земля.<br>
+<b>Б</b>ольшая… безумно сложная система…<br>
+<b>Л</b>ишь та любовь к тебе всегда. <br>
+<b>Ю</b>ла будет крутиться долго… безумно долго. <br>
+<b>Навсегда<3</b><br>
+——————<br>
+Ты также, бесконечно долго, <br>
+Можешь смотреть в эти слова, <br>
+И может быть увидишь больше, <br>
+Больше чем видела вчера.<3</p>
+      </div>
+      <div style="text-align: center; margin-top: 12px;">
+        <button class="btn primary" data-target="gallery">🌸 в галерею</button>
+      </div>
+    </section>
+
+    <!-- Страница поздравления (активная) -->
+    <section id="wish" class="page active">
+      <div class="card">
+        <h2>Год прошел!</h2>
+        <p>Прошел год нашей жизни, и все постепенно меняется, как и всё в этом мире, но любовь к тебе всё растет и растет. Пусть бывают ссоры и сложности — я уверен: с тобой мы сможем пройти всё. Я как стремился, так и продолжу стремиться сделать тебя счастливей всех людей на Земле хотя бы на миг, и я сделаю это.</p>
+        <p>Я тебя люблю, и мне достаточно просто знать тебя, просто видеть, чтобы понять, что есть к чему стремиться.</p>
+        <p>Ты то, что даёт мне нечто большее, чем жизнь. Я начал пытаться понять себя, пытаться понять тебя. И хоть мне всё еще тяжело это удаётся, но через силу и страх я стараюсь понять, что мне делать в этом мире, а ты поддерживаешь моё стремление и стараешься ради меня. Я это очень ценю и люблю тебя!!!</p>
+      </div>
+      <div style="text-align: center; margin: 20px 0 10px;">
+        <button class="btn primary" data-target="gallery">🌸 смотреть галерею</button>
+      </div>
+    </section>
+
+    <!-- ГАЛЕРЕЯ с кликабельными превью (21 изображение) -->
+    <section id="gallery" class="page">
+      <div class="card" style="padding-bottom: 20px;">
+        <h2 style="margin-bottom: 4px;">МЫ</h2>
+        <p style="opacity:0.8;">Листай<3</p>
+      </div>
+
+      <div class="gallery" id="galleryGrid">
+        <!-- все превьюшки теперь имеют data-index и картинки -->
+        <div class="thumb" data-index="0"><img src="1.png" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="2.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="3.png" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="4.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="5.png" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="6.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="7.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="8.png" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="9.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="10.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="11.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="12.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="13.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="14.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="15.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="16.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="17.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="18.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="19.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="20.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="21.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="22.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="пп.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="23.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="24.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="25.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="26.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="27.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="28.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="29.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="30.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="31.jpg" alt="love 1"></div>
+        <div class="thumb" data-index="0"><img src="32.jpg" alt="love 1"></div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 22px;">
+        <button class="btn" data-target="wish">⬅ назад к поздравлению</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- МОДАЛЬНОЕ ОКНО-ГАЛЕРЕЯ с листалкой -->
+  <div class="modal-gallery" id="galleryModal">
+    <div class="modal-content">
+      <button class="close-btn" id="closeModalBtn">&times;</button>
+      <div class="modal-image-container">
+        <img id="modalFullImg" src="" alt="полное изображение">
+      </div>
+      <div class="modal-caption" id="modalCounter"></div>
+      <div class="modal-nav">
+        <button id="prevBtn">←</button>
+        <button id="nextBtn">→</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ---------- ПРЕЛОАДЕР ----------
+      const preloader = document.getElementById('preloader');
+      const header = document.getElementById('site-header');
+      const nav = document.getElementById('site-nav');
+      const content = document.getElementById('site-content');
+
+      window.addEventListener('load', function() {
+        setTimeout(() => {
+          preloader.style.opacity = '0';
+          preloader.style.pointerEvents = 'none';
+          setTimeout(() => {
+            preloader.style.display = 'none';
+          }, 500);
+          header.style.display = '';
+          nav.style.display = '';
+          content.style.display = '';
+        }, 2500);
+      });
+
+      // ---------- НАВИГАЦИЯ ----------
+      const buttons = document.querySelectorAll('.btn[data-target]');
+      const pages = document.querySelectorAll('section.page');
+
+      function showPage(targetId) {
+        pages.forEach(p => p.classList.remove('active'));
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) targetEl.classList.add('active');
+      }
+
+      buttons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const target = btn.getAttribute('data-target');
+          if (target) showPage(target);
+        });
+      });
+
+      // ---------- ГАЛЕРЕЯ С ЛИСТАЛКОЙ ----------
+      const thumbs = document.querySelectorAll('.thumb'); // все превью
+      const modal = document.getElementById('galleryModal');
+      const modalImg = document.getElementById('modalFullImg');
+      const modalCounter = document.getElementById('modalCounter');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const closeBtn = document.getElementById('closeModalBtn');
+
+      let currentIndex = 0;
+      const totalImages = thumbs.length; // 21
+
+      // заполняем массив src из превью (data-атрибут или сам src)
+      function getImageSrcFromThumb(index) {
+        const img = thumbs[index].querySelector('img');
+        return img ? img.src : '';
+      }
+
+      function openModal(index) {
+        if (index < 0) index = 0;
+        if (index >= totalImages) index = totalImages - 1;
+        currentIndex = index;
+        const src = getImageSrcFromThumb(currentIndex);
+        modalImg.src = src;
+        modalCounter.innerText = `${currentIndex+1} / ${totalImages}`;
+        modal.classList.add('open');
+      }
+
+      function closeModal() {
+        modal.classList.remove('open');
+      }
+
+      function showPrev() {
+        currentIndex = (currentIndex - 1 + totalImages) % totalImages;
+        modalImg.src = getImageSrcFromThumb(currentIndex);
+        modalCounter.innerText = `${currentIndex+1} / ${totalImages}`;
+      }
+
+      function showNext() {
+        currentIndex = (currentIndex + 1) % totalImages;
+        modalImg.src = getImageSrcFromThumb(currentIndex);
+        modalCounter.innerText = `${currentIndex+1} / ${totalImages}`;
+      }
+
+      // клик по превью
+      thumbs.forEach((thumb, idx) => {
+        thumb.addEventListener('click', () => {
+          openModal(idx);
+        });
+      });
+
+      // кнопки
+      prevBtn.addEventListener('click', showPrev);
+      nextBtn.addEventListener('click', showNext);
+      closeBtn.addEventListener('click', closeModal);
+
+      // клик вне контента (на фон) — закрыть
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      // клавиши влево/вправо при открытом модальном окне
+      document.addEventListener('keydown', (e) => {
+        if (!modal.classList.contains('open')) return;
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          showPrev();
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          showNext();
+        } else if (e.key === 'Escape') {
+          closeModal();
+        }
+      });
+
+      // ---------- ЛЕТЯЩИЕ ЛЕПЕСТКИ (canvas) ----------
+      const canvas = document.getElementById('sakuraCanvas');
+      const ctx = canvas.getContext('2d');
+      let width, height;
+      let petals = [];
+
+      function initCanvas() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+      }
+
+      const PETAL_COUNT = 40;
+      class Petal {
+        constructor() {
+          this.reset();
+        }
+        reset() {
+          this.x = Math.random() * width;
+          this.y = Math.random() * height - height;
+          this.size = 6 + Math.random() * 14;
+          this.speedY = 1 + Math.random() * 3;
+          this.speedX = 0.2 + Math.random() * 1.2;
+          this.opacity = 0.5 + Math.random() * 0.5;
+          this.angle = Math.random() * Math.PI * 2;
+          this.swing = 0.2 + Math.random() * 0.8;
+        }
+        update() {
+          this.y += this.speedY;
+          this.x += Math.sin(this.angle) * this.swing * 0.6;
+          this.angle += 0.02;
+          if (this.y > height + 30 || this.x < -30 || this.x > width + 30) {
+            this.reset();
+            this.y = -20 - Math.random() * 40;
+            this.x = Math.random() * width;
+          }
+        }
+        draw() {
+          ctx.save();
+          ctx.translate(this.x, this.y);
+          ctx.rotate(Math.sin(this.angle) * 0.3);
+          ctx.beginPath();
+          ctx.ellipse(0, 0, this.size * 0.7, this.size * 0.4, 0, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 190, 210, ${this.opacity})`;
+          ctx.shadowColor = '#ffb7c5';
+          ctx.shadowBlur = 10;
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      function initPetals() {
+        for (let i = 0; i < PETAL_COUNT; i++) {
+          petals.push(new Petal());
+        }
+      }
+
+      function animatePetals() {
+        ctx.clearRect(0, 0, width, height);
+        petals.forEach(p => {
+          p.update();
+          p.draw();
+        });
+        requestAnimationFrame(animatePetals);
+      }
+
+      initCanvas();
+      initPetals();
+      animatePetals();
+
+      window.addEventListener('resize', () => {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        petals = [];
+        initPetals();
+      });
+
+    })();
+  </script>
+</body>
+</html>
